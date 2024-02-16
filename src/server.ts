@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { FastifyError, errorCodes } from "fastify";
 import { config } from "dotenv";
 import cors from '@fastify/cors';
 import { generateResponse } from "../AI_Generate";
@@ -23,7 +23,8 @@ server.post('/generateRecipe',generateResponse);
 
 
 
-server.listen({ port: PORT }, err => {
-    if (err) throw err;
-    console.log(`server listening on http://localhost:${PORT}`);
-});
+//Porta 
+server.listen({
+    host:'0.0.0.0',
+    port: process.env.PORT??3000,
+})
