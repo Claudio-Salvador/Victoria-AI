@@ -58,9 +58,13 @@ var server = (0, import_fastify.default)();
 server.register(import_cors.default, {
   origin: true
 });
+
+
 server.get("/", async () => {
   return "Hello, world!";
 });
+
+
 server.post("/generateRecipe", generateResponse);
 server.listen({
   host: "0.0.0.0",

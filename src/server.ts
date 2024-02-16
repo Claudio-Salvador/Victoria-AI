@@ -2,7 +2,7 @@ import fastify, { FastifyError, errorCodes } from "fastify";
 import { config } from "dotenv";
 import cors from '@fastify/cors';
 import { generateResponse } from "../AI_Generate";
-
+import path from "path";
 config();
 
 
@@ -14,14 +14,19 @@ server.register(cors,{
     origin:true, 
 });
 
-
-server.get('/',async ()=>{
-    return "Hello, world!";
+server.register(require("@fastify/view"), {
+    engine: {
+      ejs: require("ejs"),
+    },
+    templates: "public", // Diretório de visualizações
+  });
+    
+server.get("/", (req, reply) => {
+    reply.view("index.ejs", { text: "Ola Porra" });
 });
-
 server.post('/generateRecipe',generateResponse);
 
-
+ 
 
 //Porta 
 server.listen({
