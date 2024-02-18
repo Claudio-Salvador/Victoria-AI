@@ -25,8 +25,8 @@ export const generateResponse = async (req, res) => {
         let text = '';
         for await (const chunk of result.stream) {
             const chunkText = chunk.text();
-            console.log(chunkText);
             text += chunkText;
+            console.log(chunkText);
         }
 
         res.send({ response: text });
@@ -35,3 +35,18 @@ export const generateResponse = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export  const GreetAI = async ()=>{
+    try {
+        const  prompt  = "Faz uma saudação e se apresenta dizendo que és a VictorIA e que pretendes ajudar os  com respostas, solicita que eles deixem seus número de whatsapp para poderem testar-te, Seja criativa em um texto curto";
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        return text;
+    } catch (err) {
+        console.error(err);
+       return ({ message: "Internal server error" });
+    }
+
+}
