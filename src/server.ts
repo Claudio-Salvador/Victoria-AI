@@ -1,9 +1,27 @@
 import fastify, { FastifyError, errorCodes } from "fastify";
 import { config } from "dotenv";
 import cors from '@fastify/cors';
-import { GreetAI, generateResponse } from "../AI_Generate";
+import { GreetAI, generateResponse } from "../AI_Generate/index";
 import path from "path";
 config();
+
+//Whatsapp-config
+const { Client, LocalAuth,Message, MessageMedia } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+
+import WhatsappInit from "./whatsappVictorIA/whatsapp";
+
+
+
+const client = new Client({
+    authStrategy: new LocalAuth()
+}); 
+
+client.on('qr', (qr: string) => {
+    qrcode.generate(qr, { small: true });
+});
+WhatsappInit(client);
+//Whatsapp-config-End
 
 
 const PORT = process.env.PORT;

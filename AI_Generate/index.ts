@@ -1,3 +1,5 @@
+import { text } from "stream/consumers";
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require("dotenv");
 
@@ -17,7 +19,7 @@ const model = configuration.getGenerativeModel({ model: modelId });
  * @param {Object} res - The response object.
  * @returns {Promise} - A promise that resolves when the response is sent.
  */
-export const generateResponse = async (req, res) => {
+export const generateResponse = async (req:Request, res:Response) => {
     try {
         const { prompt } = req.body;
 
@@ -48,5 +50,25 @@ export  const GreetAI = async ()=>{
         console.error(err);
        return ({ message: "Internal server error" });
     }
+
+}
+
+export  const whatsappAI = async (input:string)=>{
+    try {
+   
+        const result = await model.generateContent(input);
+        const response = await result.response;
+        const text = response.text();
+         // Verificar se há bloqueio de segurança e fornecer uma resposta genérica se bloqueado
+    if (result.feedbackPrompt && result.feedbackPrompt.motivoBloqueio === 'SEGURANÇA') {
+        return  "😢 Deixaste-me triste! O conteúdo que você solicitou não pode ser gerado. Pode ser ofensivo ou prejudicial." ;
+      } else {
+         return text;
+      }
+     } 
+     catch (err) {
+      
+        return "😢 Deixaste-me triste!\n\nO conteúdo que você solicitou não pode ser gerado. Pode ser ofensivo ou prejudicial.\n\nTente outra abordagem comigo ou então serei obrigada a banir você do meu atendimento Assistente." ;
+     }
 
 }
