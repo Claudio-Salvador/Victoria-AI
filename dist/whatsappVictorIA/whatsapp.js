@@ -1,10 +1,12 @@
 "use strict";
-var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -13,19 +15,14 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/server.ts
-var import_fastify = __toESM(require("fastify"));
-var import_dotenv = require("dotenv");
-var import_cors = __toESM(require("@fastify/cors"));
+// src/whatsappVictorIA/whatsapp.ts
+var whatsapp_exports = {};
+__export(whatsapp_exports, {
+  default: () => WhatsappInit
+});
+module.exports = __toCommonJS(whatsapp_exports);
 
 // AI_Generate/index.ts
 var { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -34,34 +31,6 @@ dotenv.config();
 var configuration = new GoogleGenerativeAI(process.env.API_KEY);
 var modelId = "gemini-pro";
 var model = configuration.getGenerativeModel({ model: modelId });
-var generateResponse = async (req, res) => {
-  try {
-    const { prompt } = req.body;
-    const result = await model.generateContentStream(prompt);
-    let text = "";
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      text += chunkText;
-      console.log(chunkText);
-    }
-    res.send({ response: text });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-var GreetAI = async () => {
-  try {
-    const prompt = "Faz uma sauda\xE7\xE3o e se apresenta dizendo que \xE9s a VictorIA e que pretendes ajudar os  com respostas, solicita que eles deixem seus n\xFAmero de whatsapp para poderem testar-te, Seja criativa em um texto curto";
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    return text;
-  } catch (err) {
-    console.error(err);
-    return { message: "Internal server error" };
-  }
-};
 var whatsappAI = async (input, UHistory, MHistory) => {
   try {
     const defaultModel = [
@@ -179,7 +148,7 @@ function formatNumber(phoneNumber) {
 }
 
 // src/whatsappVictorIA/controllerWhatsap.ts
-async function whatsappControl(client2, message) {
+async function whatsappControl(client, message) {
   const number = formatNumber(message.from);
   const db = new DataBase();
   const Auth = await FindUserAuth(number, db);
@@ -197,18 +166,18 @@ async function whatsappControl(client2, message) {
       if (responseIA.length) {
         await db.StoreHistoryUser(Auth.id, Mensagem);
         await db.StoreHistoryVictorIA(Auth.id, responseIA);
-        await client2.sendMessage(message.from, responseIA);
+        await client.sendMessage(message.from, responseIA);
         console.log("Mensagem enviada com sucesso!");
       }
     } catch (error) {
       const sms = "Pe\xE7o desculpa mais n\xE3o consegui entender o que disseste, podes por favor repetir ou formular melhor a sua quest\xE3o \u263A\u{1F467}\u{1F3FF}\n\n Sou a VictorIA, portanto da pr\xF3xima fa\xE7o um esfor\xE7o para te entender melhor \u{1F607}\u{1F64C}";
-      await client2.sendMessage(message.from, sms);
+      await client.sendMessage(message.from, sms);
       console.error("Erro ao enviar mensagem:", error);
     }
     return "first";
   } else {
     let prontIndex = "Ol\xE1! Sou a VitorIA, a mais nova assistente virtual desenvolvida em Angola, Estou em faze expermental no entanto, apenas alguns contactos selecionados est\xE3o apto para testarem as minhas capacidades como assistente.\n\nDentro em breve estaremos aberto para todos e poder\xE1s testar tamb\xE9m.\n\nAt\xE9 l\xE1!me despe\xE7o de ti\u{1F917} \n VictorIA - a sua assistente.";
-    await client2.sendMessage(message.from, prontIndex);
+    await client.sendMessage(message.from, prontIndex);
     console.log("Mensagem enviada com sucesso!");
   }
 }
@@ -219,56 +188,12 @@ async function FindUserAuth(NumerWhatsapp, db) {
 }
 
 // src/whatsappVictorIA/whatsapp.ts
-function WhatsappInit(client2) {
-  client2.on("ready", () => {
+function WhatsappInit(client) {
+  client.on("ready", () => {
     console.log("Client is ready Just!");
-    client2.on("message", async (message) => {
-      await whatsappControl(client2, message);
+    client.on("message", async (message) => {
+      await whatsappControl(client, message);
     });
   });
-  client2.initialize();
+  client.initialize();
 }
-
-// src/server.ts
-(0, import_dotenv.config)();
-var { Client, LocalAuth, Message, MessageMedia } = require("whatsapp-web.js");
-var qrcode = require("qrcode-terminal");
-var client = new Client({
-  authStrategy: new LocalAuth()
-});
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-});
-WhatsappInit(client);
-var PORT = process.env.PORT;
-var server = (0, import_fastify.default)();
-var greetText;
-var greet = async () => {
-  greetText = await GreetAI();
-};
-greet();
-setInterval(async () => {
-  greet();
-}, 6e4);
-server.register(import_cors.default, {
-  origin: true
-});
-server.register(require("@fastify/view"), {
-  engine: {
-    ejs: require("ejs")
-  },
-  templates: "public"
-  // Diretório de visualizações
-});
-server.get("/", (req, reply) => {
-  reply.view("index.ejs", { text: greetText });
-});
-server.post("/generateRecipe", generateResponse);
-server.get("/whatsappVictoria", () => {
-  console.log("Whatsapp");
-});
-server.listen({
-  host: "0.0.0.0",
-  port: process.env.PORT ?? 3e3
-});
-console.log(`http://localhost:${PORT}`);
