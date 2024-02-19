@@ -19,24 +19,22 @@ export default async function whatsappControl(client,message){
             const MHistory:[]=history.MHistory.map((item)=>{return item.text});
 
             const responseIA= await whatsappAI(Mensagem,UHistory,MHistory);
-            console.log(responseIA);
-            if(responseIA.length && responseIA!="error") {
-                await db.StoreHistoryUser(Auth.id,Mensagem)
-                await db.StoreHistoryVictorIA(Auth.id,responseIA)
-                await client.sendMessage(message.from, responseIA);
-                console.log('Mensagem enviada com sucesso!');
-            }else{
+           
+                if(responseIA.length) {
+                    await db.StoreHistoryUser(Auth.id,Mensagem)
+                    await db.StoreHistoryVictorIA(Auth.id,responseIA)
+                    await client.sendMessage(message.from, responseIA);
+                    console.log('Mensagem enviada com sucesso!');
+                }
+
+            } catch (error) {
                 const sms="Peço desculpa mais não consegui entender o que disseste, podes por favor repetir ou formular melhor a sua questão ☺👧🏿\n\n Sou a VictorIA, portanto da próxima faço um esforço para te entender melhor 😇🙌";
                 await client.sendMessage(message.from, sms);
-                console.log('Mensagem enviada com sucesso!');
-             }
-            
-            } catch (error) {
                 console.error('Erro ao enviar mensagem:', error);
             }
            return "first";
        }
-     
+
      else{
          let prontIndex="Olá! Sou a VitorIA, a mais nova assistente virtual desenvolvida em Angola, Estou em faze expermental no entanto, apenas alguns contactos selecionados estão apto para testarem as minhas capacidades como assistente.\n\nDentro em breve estaremos aberto para todos e poderás testar também.\n\nAté lá!me despeço de ti🤗 \n VictorIA - a sua assistente.";
          await client.sendMessage(message.from, prontIndex);
@@ -47,10 +45,8 @@ export default async function whatsappControl(client,message){
 
 async function FindUserAuth(NumerWhatsapp: string,db): object | undefined {
 
-    
     const AllUser = await db.GetAllUsers();
-
     const User = AllUser.find(objeto => objeto.whatsapp === NumerWhatsapp);
-  
     return User;
-  }
+
+}

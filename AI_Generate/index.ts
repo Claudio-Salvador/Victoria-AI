@@ -95,10 +95,11 @@ export  const whatsappAI = async (input:string,UHistory:[],MHistory:[])=>{
         const response = await result.response;
         const text = response.text();
         if(text==""){
-            return "error"
+            const result = await model.generateContent(input);
+            const response = await result.response;
+            const text = response.text();
+            return text;
         }
-
-
         return text;
 
      } 
