@@ -16,7 +16,6 @@ import WhatsappInit from "./whatsappVictorIA/whatsapp";
 const client = new Client({
     authStrategy: new LocalAuth()
 }); 
-
 client.on('qr', (qr: string) => {
     qrcode.generate(qr, { small: true });
 });

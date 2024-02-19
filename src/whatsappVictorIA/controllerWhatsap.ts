@@ -1,49 +1,56 @@
 import { whatsappAI } from "../../AI_Generate";
+import DataBase from "../DataBase/databaseHistory";
 import formatNumber from "./validateNumber";
+
 
 
 export default async function whatsappControl(client,message){
 
     const number=formatNumber(message.from)
-   
-    if (['OLÁ', 'HELLO', 'VICTORIA', 'BOM DIA', 'BOA TARDE', 'BOA NOITE',].includes(message.body.toUpperCase())) {
+    const db = new DataBase();
+    const Auth = await FindUserAuth(number,db);
+
+    if (Auth) {
 
         try {  
-               const  prompt  = " \nOBS: sempre depois de responder mostra sempre disponibilidade em continuar a conversar, lembra sempre que o seu nome é victorIA e se perguntarem, diz foste Criada por um desenvolvidor angolano Cláudio Salvador Fernando e que tens muito gosto em ajudar. e nas respostas seja o mais objectivo possivel.E quando nao tiver a certeza sugere links e te considera angolana sempre que perguntarem.Nunca retorna link nos resultados e se ouver palavras ofensivas , responde de forma educada que n]ao aceitas ma conduta de uso dos serviços VictorIA e podes banir a assistencia para o teu contacto";
-               let prontIndex=message.body+prompt;
-    
-               const responseIA= await whatsappAI(prontIndex);
-               await client.sendMessage(message.from, responseIA);
-               console.log('Mensagem enviada com sucesso!');
-               
+            let Mensagem:string=message.body;
+            const history=await db.GetHistoryByUser(Auth.id);
+            const UHistory:[]=history.UHistory.map((item)=>{return item.text});
+            const MHistory:[]=history.MHistory.map((item)=>{return item.text});
+
+            const responseIA= await whatsappAI(Mensagem,UHistory,MHistory);
+            console.log(responseIA);
+            if(responseIA.length && responseIA!="error") {
+                await db.StoreHistoryUser(Auth.id,Mensagem)
+                await db.StoreHistoryVictorIA(Auth.id,responseIA)
+                await client.sendMessage(message.from, responseIA);
+                console.log('Mensagem enviada com sucesso!');
+            }else{
+                const sms="Peço desculpa mais não consegui entender o que disseste, podes por favor repetir ou formular melhor a sua questão ☺👧🏿\n\n Sou a VictorIA, portanto da próxima faço um esforço para te entender melhor 😇🙌";
+                await client.sendMessage(message.from, sms);
+                console.log('Mensagem enviada com sucesso!');
+             }
+            
             } catch (error) {
                 console.error('Erro ao enviar mensagem:', error);
             }
            return "first";
        }
-       else if(number=="927557731"){
-   
-        const  prompt  = "\nOBS: sempre depois de responder mostra sempre disponibilidade em continuar a conversar e responde sempre Para Gelsia somandalu ou Gelsinha, se estiver envolvido uma pergunta  lembra sempre que o seu nome é victorIA e foste Criada por um desenvolvidor angolano Cláudio Salvador Fernando e que tens muito gosto em ajudar. e nas respostas seja o mais objectivo possivel.E quando nao tiver a certeza sugere links e te considera angolana sempre que perguntarem. Nunca retorna link nos resultados e se ouver palavras ofensivas , responde de forma educada que n]ao aceitas ma conduta de uso dos serviços VictorIA e podes banir a assistencia para o teu contacto";
-        let prontIndex=message.body+prompt;
-
-        const responseIA= await whatsappAI(prontIndex);
-        await client.sendMessage(message.from, responseIA);
-        
-        console.log('Mensagem enviada com sucesso!');
-
-
-
-       }
-       else{
-
-        const  prompt  = " \nOBS: depois de responder mostra sempre disponibilidade em continuar a conversar, se estiver envolvido uma pergunta e lembra sempre que o seu nome é victorIA e foste Criada por um desenvolvidor angolano Cláudio Salvador Fernando e que tens muito gosto em ajudar. e nas respostas seja o mais objectivo possivel.E quando nao tiver a certeza sugere links e te considera angolana sempre que perguntarem.";
-        let prontIndex=message.body+prompt;
-
-        const responseIA= await whatsappAI(prontIndex);
-       
-        await client.sendMessage(message.from, responseIA);
-
-        console.log('Mensagem enviada com sucesso!');
+     
+     else{
+         let prontIndex="Olá! Sou a VitorIA, a mais nova assistente virtual desenvolvida em Angola, Estou em faze expermental no entanto, apenas alguns contactos selecionados estão apto para testarem as minhas capacidades como assistente.\n\nDentro em breve estaremos aberto para todos e poderás testar também.\n\nAté lá!me despeço de ti🤗 \n VictorIA - a sua assistente.";
+         await client.sendMessage(message.from, prontIndex);
+         console.log('Mensagem enviada com sucesso!');
 
        }
 }
+
+async function FindUserAuth(NumerWhatsapp: string,db): object | undefined {
+
+    
+    const AllUser = await db.GetAllUsers();
+
+    const User = AllUser.find(objeto => objeto.whatsapp === NumerWhatsapp);
+  
+    return User;
+  }
