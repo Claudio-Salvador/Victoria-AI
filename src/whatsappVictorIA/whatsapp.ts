@@ -1,3 +1,4 @@
+import { prismaClient } from "../DataBase/PrismaClient";
 import whatsappControl from "./controllerWhatsap";
 import { Client, LocalAuth, Message, MessageMedia } from 'whatsapp-web.js';
 const qrcodeG = require('qrcode');
@@ -14,10 +15,17 @@ export default class WhatsappInit {
     this.initialize();
   }
 
-  private initialize() {
-    this.client.on('qr', (qr: string) => {
+  private async  initialize() {
+    this.client.on('qr', async (qr: string) => {
       qrcode.generate(qr, { small: true });
-      console.log(qr);
+      // Empty the table before inserting
+      const clearTable = await prismaClient.generateQrCode.deleteMany();
+      const generateQR =  prismaClient.generateQrCode;
+        await  generateQR.create({
+        data:{
+          code:qr
+        }
+      });
       qrcodeG.toFile('qrcode.png', qr);
     });
 
