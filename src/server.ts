@@ -11,7 +11,16 @@ config();
 
 
 const whatsapp = new WhatsappInit();
+let textQr;
+setInterval(async () => {
+    if(whatsapp.qrcodeText() ){
+        textQr=whatsapp.qrcodeText();
+        console.log(textQr);
+        console.log("\n");
+    }
+},4000);
 
+console.log("Sou mau"+textQr);
 
 
 const showQRCode = (req:Request, reply:Response) => {

@@ -6,6 +6,7 @@ const qrcode = require('qrcode-terminal');
 
 export default class WhatsappInit {
   private client: Client;
+  public codeQr: string;
  
   constructor() {
     this.client = new Client({
@@ -15,16 +16,16 @@ export default class WhatsappInit {
     this.initialize();
   }
 
-  private async  initialize() {
-    this.client.on('qr', async (qr: string) => {
+  private  initialize() {
+    this.client.on('qr', (qr: string) => {
       qrcode.generate(qr, { small: true });
-      //Empty the table before inserting
-      const generateQR =  prismaClient.generateQrCode;
-        await  generateQR.create({
-        data:{
-          code:qr
-        }
-      });
+        this.codeQr=qr;
+      // const generateQR =  prismaClient.generateQrCode;
+      //   await  generateQR.create({
+      //     data: {
+      //     code:qr
+      //   }
+      // });
       qrcodeG.toFile('qrcode.png', qr);
     });
 
@@ -36,5 +37,10 @@ export default class WhatsappInit {
     });
 
     this.client.initialize();
+  }
+
+  public qrcodeText(){
+    
+      return this.codeQr;
   }
 }
