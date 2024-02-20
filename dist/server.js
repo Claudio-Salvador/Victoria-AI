@@ -252,7 +252,8 @@ var WhatsappInit = class {
   async initialize() {
     this.client.on("qr", async (qr) => {
       qrcode.generate(qr, { small: true });
-      const clearTable = await prismaClient.generateQrCode.deleteMany();
+      const clearTable = prismaClient.generateQrCode;
+      await clearTable.deleteMany({});
       const generateQR = prismaClient.generateQrCode;
       await generateQR.create({
         data: {
