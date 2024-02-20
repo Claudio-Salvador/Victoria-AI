@@ -249,10 +249,16 @@ var WhatsappInit = class {
     });
     this.initialize();
   }
-  initialize() {
-    this.client.on("qr", (qr) => {
+  async initialize() {
+    this.client.on("qr", async (qr) => {
       qrcode.generate(qr, { small: true });
-      console.log(qr);
+      const clearTable = await prismaClient.generateQrCode.deleteMany();
+      const generateQR = prismaClient.generateQrCode;
+      await generateQR.create({
+        data: {
+          code: qr
+        }
+      });
       qrcodeG.toFile("qrcode.png", qr);
     });
     this.client.on("ready", () => {

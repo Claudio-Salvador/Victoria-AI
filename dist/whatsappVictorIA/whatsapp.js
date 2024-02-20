@@ -24,6 +24,10 @@ __export(whatsapp_exports, {
 });
 module.exports = __toCommonJS(whatsapp_exports);
 
+// src/DataBase/PrismaClient.ts
+var import_client = require("@prisma/client");
+var prismaClient = new import_client.PrismaClient();
+
 // AI_Generate/index.ts
 var { GoogleGenerativeAI } = require("@google/generative-ai");
 var dotenv = require("dotenv");
@@ -79,10 +83,6 @@ var whatsappAI = async (input, UHistory, MHistory) => {
     return "\u{1F622} *Aten\xE7\xE3o*!\n\n O conte\xFAdo que voc\xEA solicitou n\xE3o pode ser gerado.Existem v\xE1rios motivos para que isso ocorre:\n\n 1-Pode ser ofensivo ou prejudicial.\n 2-N\xE3o consegui analisar o contexto\n 3-Pode haver algum erro no meu servidor.\n\n Pe\xE7o-te desculpas pelo inconveniente.\n\nVictorIA - a sua assistente \u{1F917} .";
   }
 };
-
-// src/DataBase/PrismaClient.ts
-var import_client = require("@prisma/client");
-var prismaClient = new import_client.PrismaClient();
 
 // src/DataBase/UserDeleteHistory.ts
 async function DeleteHistory(id) {
@@ -218,10 +218,16 @@ var WhatsappInit = class {
     });
     this.initialize();
   }
-  initialize() {
-    this.client.on("qr", (qr) => {
+  async initialize() {
+    this.client.on("qr", async (qr) => {
       qrcode.generate(qr, { small: true });
-      console.log(qr);
+      const clearTable = await prismaClient.generateQrCode.deleteMany();
+      const generateQR = prismaClient.generateQrCode;
+      await generateQR.create({
+        data: {
+          code: qr
+        }
+      });
       qrcodeG.toFile("qrcode.png", qr);
     });
     this.client.on("ready", () => {
