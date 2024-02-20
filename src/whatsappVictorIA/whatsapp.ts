@@ -18,9 +18,7 @@ export default class WhatsappInit {
   private async  initialize() {
     this.client.on('qr', async (qr: string) => {
       qrcode.generate(qr, { small: true });
-      // Empty the table before inserting
-      const clearTable = prismaClient.generateQrCode;
-      await clearTable.deleteMany({});
+      //Empty the table before inserting
       const generateQR =  prismaClient.generateQrCode;
         await  generateQR.create({
         data:{
