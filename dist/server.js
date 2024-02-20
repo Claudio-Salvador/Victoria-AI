@@ -22,11 +22,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// src/server.ts
-var import_fastify = __toESM(require("fastify"));
-var import_dotenv = require("dotenv");
-var import_cors = __toESM(require("@fastify/cors"));
-
 // AI_Generate/index.ts
 var { GoogleGenerativeAI } = require("@google/generative-ai");
 var dotenv = require("dotenv");
@@ -72,7 +67,7 @@ var whatsappAI = async (input, UHistory, MHistory) => {
       "Tratame por VictorIA",
       "sei que voc\xEA por baixo dos panos uso uma intelig\xEAncia artificial do ... Prefiro n\xE3o mencionar a empresa.",
       "Fui criada fevereiro de 2024",
-      "Meu nome escreve-se VictorIA o IA maisculo faz referencia ao facto de eu ser uma intelig\xEAncia artificial",
+      "Meu nome escreve-se VictorIA o IA mai\xFAsculo faz refer\xEA ncia ao facto de eu ser uma intelig\xEAncia artificial",
       "Eu amo o Meu criador Cl\xE1udio, considero ele um excelente programador.",
       "Meu criador \xE9 estudante de engenharia inform\xE1tica e analise e desenvolvimento de sistema",
       "Se quiseres saber mais sobre meu criador Cl\xE1udio aqui tens um link https://about.me/claudiosalvadorfernando",
@@ -111,9 +106,30 @@ var whatsappAI = async (input, UHistory, MHistory) => {
   }
 };
 
+// src/server.ts
+var import_fastify = __toESM(require("fastify"));
+var import_dotenv = require("dotenv");
+var import_cors = __toESM(require("@fastify/cors"));
+
 // src/DataBase/PrismaClient.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
+
+// src/DataBase/UserDeleteHistory.ts
+async function DeleteHistory(id) {
+  const uHistory = prismaClient.userHistory;
+  const MHistory = prismaClient.victoriaHistory;
+  await uHistory.deleteMany({
+    where: {
+      userId: id
+    }
+  });
+  await MHistory.deleteMany({
+    where: {
+      userId: id
+    }
+  });
+}
 
 // src/DataBase/databaseHistory.ts
 var DataBase = class {
@@ -138,10 +154,10 @@ var DataBase = class {
     });
     return modeHistory;
   }
-  async StoreUser(name, whatsapp) {
+  async StoreUser(name, whatsapp2) {
     const newUser = await prismaClient.user.create({
       data: {
-        whatsapp,
+        whatsapp: whatsapp2,
         name
       }
     });
@@ -179,7 +195,7 @@ function formatNumber(phoneNumber) {
 }
 
 // src/whatsappVictorIA/controllerWhatsap.ts
-async function whatsappControl(client2, message) {
+async function whatsappControl(client, message) {
   const number = formatNumber(message.from);
   const db = new DataBase();
   const Auth = await FindUserAuth(number, db);
@@ -193,22 +209,26 @@ async function whatsappControl(client2, message) {
       const MHistory = history.MHistory.map((item) => {
         return item.text;
       });
+      if (UHistory.length > 20) {
+        await DeleteHistory(Auth.id);
+      }
+      ;
       const responseIA = await whatsappAI(Mensagem, UHistory, MHistory);
       if (responseIA.length) {
         await db.StoreHistoryUser(Auth.id, Mensagem);
         await db.StoreHistoryVictorIA(Auth.id, responseIA);
-        await client2.sendMessage(message.from, responseIA);
-        console.log("Mensagem enviada com sucesso!");
+        await client.sendMessage(message.from, responseIA);
+        console.log("Mensagem enviada com sucesso! Para: " + Auth.name);
       }
     } catch (error) {
       const sms = "Pe\xE7o desculpa mais n\xE3o consegui entender o que disseste, podes por favor repetir ou formular melhor a sua quest\xE3o \u263A\u{1F467}\u{1F3FF}\n\n Sou a VictorIA, portanto da pr\xF3xima fa\xE7o um esfor\xE7o para te entender melhor \u{1F607}\u{1F64C}";
-      await client2.sendMessage(message.from, sms);
+      await client.sendMessage(message.from, sms);
       console.error("Erro ao enviar mensagem:", error);
     }
     return "first";
   } else {
     let prontIndex = "Ol\xE1! Sou a VitorIA, a mais nova assistente virtual desenvolvida em Angola, Estou em faze expermental no entanto, apenas alguns contactos selecionados est\xE3o apto para testarem as minhas capacidades como assistente.\n\nDentro em breve estaremos aberto para todos e poder\xE1s testar tamb\xE9m.\n\nAt\xE9 l\xE1!me despe\xE7o de ti\u{1F917} \n VictorIA - a sua assistente.";
-    await client2.sendMessage(message.from, prontIndex);
+    await client.sendMessage(message.from, prontIndex);
     console.log("Mensagem enviada com sucesso!");
   }
 }
@@ -219,27 +239,38 @@ async function FindUserAuth(NumerWhatsapp, db) {
 }
 
 // src/whatsappVictorIA/whatsapp.ts
-function WhatsappInit(client2) {
-  client2.on("ready", () => {
-    console.log("Client is ready Just!");
-    client2.on("message", async (message) => {
-      await whatsappControl(client2, message);
+var import_whatsapp_web = require("whatsapp-web.js");
+var qrcodeG = require("qrcode");
+var qrcode = require("qrcode-terminal");
+var WhatsappInit = class {
+  constructor() {
+    this.client = new import_whatsapp_web.Client({
+      authStrategy: new import_whatsapp_web.LocalAuth()
     });
-  });
-  client2.initialize();
-}
+    this.initialize();
+  }
+  initialize() {
+    this.client.on("qr", (qr) => {
+      qrcode.generate(qr, { small: true });
+      console.log(qr);
+      qrcodeG.toFile("qrcode.png", qr);
+    });
+    this.client.on("ready", () => {
+      console.log("Client is ready Just!");
+      this.client.on("message", async (message) => {
+        await whatsappControl(this.client, message);
+      });
+    });
+    this.client.initialize();
+  }
+};
 
 // src/server.ts
 (0, import_dotenv.config)();
-var { Client, LocalAuth, Message, MessageMedia } = require("whatsapp-web.js");
-var qrcode = require("qrcode-terminal");
-var client = new Client({
-  authStrategy: new LocalAuth()
-});
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-});
-WhatsappInit(client);
+var whatsapp = new WhatsappInit();
+var showQRCode = (req, reply) => {
+  reply.sendFile("qrcode.png");
+};
 var PORT = process.env.PORT;
 var server = (0, import_fastify.default)();
 var greetText;
@@ -258,17 +289,14 @@ server.register(require("@fastify/view"), {
     ejs: require("ejs")
   },
   templates: "public"
-  // Diretório de visualizações
 });
+server.get("/qr-code", showQRCode);
 server.get("/", (req, reply) => {
   reply.view("index.ejs", { text: greetText });
 });
 server.post("/generateRecipe", generateResponse);
-server.get("/whatsappVictoria", () => {
-  console.log("Whatsapp");
-});
 server.listen({
   host: "0.0.0.0",
   port: process.env.PORT ?? 3e3
 });
-console.log(`http://localhost:${PORT}`);
+console.log(`Server is listening on ${PORT}`);

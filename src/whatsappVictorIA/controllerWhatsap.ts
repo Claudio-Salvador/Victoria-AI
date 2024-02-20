@@ -1,4 +1,5 @@
 import { whatsappAI } from "../../AI_Generate";
+import DeleteHistory from "../DataBase/UserDeleteHistory";
 import DataBase from "../DataBase/databaseHistory";
 import formatNumber from "./validateNumber";
 
@@ -12,19 +13,21 @@ export default async function whatsappControl(client,message){
 
     if (Auth) {
 
-        try {  
+        try { 
+
             let Mensagem:string=message.body;
             const history=await db.GetHistoryByUser(Auth.id);
             const UHistory:[]=history.UHistory.map((item)=>{return item.text});
             const MHistory:[]=history.MHistory.map((item)=>{return item.text});
-
+            if(UHistory.length>20) {await DeleteHistory(Auth.id)};
+            
             const responseIA= await whatsappAI(Mensagem,UHistory,MHistory);
            
                 if(responseIA.length) {
                     await db.StoreHistoryUser(Auth.id,Mensagem)
                     await db.StoreHistoryVictorIA(Auth.id,responseIA)
                     await client.sendMessage(message.from, responseIA);
-                    console.log('Mensagem enviada com sucesso!');
+                    console.log('Mensagem enviada com sucesso! Para: '+Auth.name);
                 }
 
             } catch (error) {
