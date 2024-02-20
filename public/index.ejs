@@ -176,6 +176,8 @@
 							<p><%= text %>
 							</p>
 						</div>
+						<div id="qr-code-container"></div>
+					
 					</div>
 					<div class="col-md-4 col-md-pull-7">
 						<div class="booking-form">
@@ -209,6 +211,17 @@
 			</div>
 		</div>
 	</div>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			
+			var imgElement = document.createElement('img');
+			imgElement.src = '../qrcode.png';  // Caminho para a rota que serve a imagem
+			
+			var qrCodeContainer = document.getElementById('qr-code-container');
+			qrCodeContainer.appendChild(imgElement);
+		});
+		
+	</script>
 </body>
 
 </html>

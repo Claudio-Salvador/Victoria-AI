@@ -41,7 +41,7 @@ var whatsappAI = async (input, UHistory, MHistory) => {
       "Tratame por VictorIA",
       "sei que voc\xEA por baixo dos panos uso uma intelig\xEAncia artificial do ... Prefiro n\xE3o mencionar a empresa.",
       "Fui criada fevereiro de 2024",
-      "Meu nome escreve-se VictorIA o IA maisculo faz referencia ao facto de eu ser uma intelig\xEAncia artificial",
+      "Meu nome escreve-se VictorIA o IA mai\xFAsculo faz refer\xEA ncia ao facto de eu ser uma intelig\xEAncia artificial",
       "Eu amo o Meu criador Cl\xE1udio, considero ele um excelente programador.",
       "Meu criador \xE9 estudante de engenharia inform\xE1tica e analise e desenvolvimento de sistema",
       "Se quiseres saber mais sobre meu criador Cl\xE1udio aqui tens um link https://about.me/claudiosalvadorfernando",
@@ -83,6 +83,22 @@ var whatsappAI = async (input, UHistory, MHistory) => {
 // src/DataBase/PrismaClient.ts
 var import_client = require("@prisma/client");
 var prismaClient = new import_client.PrismaClient();
+
+// src/DataBase/UserDeleteHistory.ts
+async function DeleteHistory(id) {
+  const uHistory = prismaClient.userHistory;
+  const MHistory = prismaClient.victoriaHistory;
+  await uHistory.deleteMany({
+    where: {
+      userId: id
+    }
+  });
+  await MHistory.deleteMany({
+    where: {
+      userId: id
+    }
+  });
+}
 
 // src/DataBase/databaseHistory.ts
 var DataBase = class {
@@ -162,12 +178,16 @@ async function whatsappControl(client, message) {
       const MHistory = history.MHistory.map((item) => {
         return item.text;
       });
+      if (UHistory.length > 20) {
+        await DeleteHistory(Auth.id);
+      }
+      ;
       const responseIA = await whatsappAI(Mensagem, UHistory, MHistory);
       if (responseIA.length) {
         await db.StoreHistoryUser(Auth.id, Mensagem);
         await db.StoreHistoryVictorIA(Auth.id, responseIA);
         await client.sendMessage(message.from, responseIA);
-        console.log("Mensagem enviada com sucesso!");
+        console.log("Mensagem enviada com sucesso! Para: " + Auth.name);
       }
     } catch (error) {
       const sms = "Pe\xE7o desculpa mais n\xE3o consegui entender o que disseste, podes por favor repetir ou formular melhor a sua quest\xE3o \u263A\u{1F467}\u{1F3FF}\n\n Sou a VictorIA, portanto da pr\xF3xima fa\xE7o um esfor\xE7o para te entender melhor \u{1F607}\u{1F64C}";
@@ -188,12 +208,28 @@ async function FindUserAuth(NumerWhatsapp, db) {
 }
 
 // src/whatsappVictorIA/whatsapp.ts
-function WhatsappInit(client) {
-  client.on("ready", () => {
-    console.log("Client is ready Just!");
-    client.on("message", async (message) => {
-      await whatsappControl(client, message);
+var import_whatsapp_web = require("whatsapp-web.js");
+var qrcodeG = require("qrcode");
+var qrcode = require("qrcode-terminal");
+var WhatsappInit = class {
+  constructor() {
+    this.client = new import_whatsapp_web.Client({
+      authStrategy: new import_whatsapp_web.LocalAuth()
     });
-  });
-  client.initialize();
-}
+    this.initialize();
+  }
+  initialize() {
+    this.client.on("qr", (qr) => {
+      qrcode.generate(qr, { small: true });
+      console.log(qr);
+      qrcodeG.toFile("qrcode.png", qr);
+    });
+    this.client.on("ready", () => {
+      console.log("Client is ready Just!");
+      this.client.on("message", async (message) => {
+        await whatsappControl(this.client, message);
+      });
+    });
+    this.client.initialize();
+  }
+};
