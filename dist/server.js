@@ -247,32 +247,40 @@ var WhatsappInit = class {
     this.client = new import_whatsapp_web.Client({
       authStrategy: new import_whatsapp_web.LocalAuth()
     });
+    this.codeQr = ".";
     this.initialize();
   }
-  async initialize() {
-    this.client.on("qr", async (qr) => {
-      qrcode.generate(qr, { small: true });
-      const generateQR = prismaClient.generateQrCode;
-      await generateQR.create({
-        data: {
-          code: qr
-        }
+  initialize() {
+    return new Promise((resolve) => {
+      this.client.on("qr", (qr) => {
+        qrcode.generate(qr, { small: true });
+        this.codeQr = qr;
+        this.qrcodeText();
+        console.log(qr);
+        qrcodeG.toFile("qrcode.png", qr);
+        resolve(qr);
       });
-      qrcodeG.toFile("qrcode.png", qr);
-    });
-    this.client.on("ready", () => {
-      console.log("Client is ready Just!");
-      this.client.on("message", async (message) => {
-        await whatsappControl(this.client, message);
+      this.client.on("ready", () => {
+        console.log("Client is ready Just!");
+        this.client.on("message", async (message) => {
+          await whatsappControl(this.client, message);
+        });
       });
+      this.client.initialize();
     });
-    this.client.initialize();
+  }
+  async qrcodeText() {
+    return this.codeQr;
   }
 };
 
 // src/server.ts
 (0, import_dotenv.config)();
 var whatsapp = new WhatsappInit();
+var textQr;
+whatsapp.initialize().then((qrCode) => {
+  textQr = qrCode;
+});
 var showQRCode = (req, reply) => {
   reply.sendFile("qrcode.png");
 };
@@ -297,7 +305,7 @@ server.register(require("@fastify/view"), {
 });
 server.get("/qr-code", showQRCode);
 server.get("/", (req, reply) => {
-  reply.view("index.ejs", { text: greetText });
+  reply.view("index.ejs", { text: greetText, qr: textQr });
 });
 server.post("/generateRecipe", generateResponse);
 server.listen({

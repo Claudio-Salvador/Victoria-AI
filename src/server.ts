@@ -12,17 +12,11 @@ config();
 
 const whatsapp = new WhatsappInit();
 let textQr;
-setInterval(async () => {
-    if(whatsapp.qrcodeText() ){
-        textQr=whatsapp.qrcodeText();
-        console.log(textQr);
-        console.log("\n");
-    }
-},4000);
-
-console.log("Sou mau"+textQr);
 
 
+whatsapp.initialize().then((qrCode) => {
+    textQr=qrCode; // Agora você pode obter o valor do QR code quando estiver disponível
+});
 const showQRCode = (req:Request, reply:Response) => {
     // const qrCodePath = path.join(__dirname, "qrcode.png");
     // reply.header('Content-Disposition', `attachment; filename=${qrCodePath}`);
@@ -59,7 +53,7 @@ server.register(require("@fastify/view"), {
 server.get("/qr-code", showQRCode);
 
 server.get("/", (req, reply) => {
-    reply.view("index.ejs", { text: greetText });
+    reply.view("index.ejs", { text: greetText, qr:textQr });
 });
 
 server.post('/generateRecipe', generateResponse);

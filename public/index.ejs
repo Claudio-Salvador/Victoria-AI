@@ -162,6 +162,9 @@
 .booking-cta p {
 	font-size: 16px;
 	color: rgba(255, 255, 255, 0.8);
+}.caixa{
+	width: 500px;
+	height: 200px;
 }
 </style>
 
@@ -173,10 +176,13 @@
 					<div class="col-md-7 col-md-push-5">
 						<div class="booking-cta">
 							<h1><sub>VICTÓR</sub>IA</h1>
-							<p><%= text %>
-							</p>
+							<p><%= text %></p>
+							
 						</div>
-						<div id="qr-code-container"></div>
+						<div id="qr-code-container">
+							<textarea name="" value="<%= qr %>" cols="30" rows="10"><%= qr %></textarea>
+						
+						</div>
 					
 					</div>
 					<div class="col-md-4 col-md-pull-7">
