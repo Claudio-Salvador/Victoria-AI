@@ -24,10 +24,6 @@ __export(whatsapp_exports, {
 });
 module.exports = __toCommonJS(whatsapp_exports);
 
-// src/DataBase/PrismaClient.ts
-var import_client = require("@prisma/client");
-var prismaClient = new import_client.PrismaClient();
-
 // AI_Generate/index.ts
 var { GoogleGenerativeAI } = require("@google/generative-ai");
 var dotenv = require("dotenv");
@@ -83,6 +79,10 @@ var whatsappAI = async (input, UHistory, MHistory) => {
     return "\u{1F622} *Aten\xE7\xE3o*!\n\n O conte\xFAdo que voc\xEA solicitou n\xE3o pode ser gerado.Existem v\xE1rios motivos para que isso ocorre:\n\n 1-Pode ser ofensivo ou prejudicial.\n 2-N\xE3o consegui analisar o contexto\n 3-Pode haver algum erro no meu servidor.\n\n Pe\xE7o-te desculpas pelo inconveniente.\n\nVictorIA - a sua assistente \u{1F917} .";
   }
 };
+
+// src/DataBase/PrismaClient.ts
+var import_client = require("@prisma/client");
+var prismaClient = new import_client.PrismaClient();
 
 // src/DataBase/UserDeleteHistory.ts
 async function DeleteHistory(id) {
@@ -216,25 +216,29 @@ var WhatsappInit = class {
     this.client = new import_whatsapp_web.Client({
       authStrategy: new import_whatsapp_web.LocalAuth()
     });
+    this.codeQr = ".";
     this.initialize();
   }
-  async initialize() {
-    this.client.on("qr", async (qr) => {
-      qrcode.generate(qr, { small: true });
-      const generateQR = prismaClient.generateQrCode;
-      await generateQR.create({
-        data: {
-          code: qr
-        }
+  initialize() {
+    return new Promise((resolve) => {
+      this.client.on("qr", (qr) => {
+        qrcode.generate(qr, { small: true });
+        this.codeQr = qr;
+        this.qrcodeText();
+        console.log(qr);
+        qrcodeG.toFile("qrcode.png", qr);
+        resolve(qr);
       });
-      qrcodeG.toFile("qrcode.png", qr);
-    });
-    this.client.on("ready", () => {
-      console.log("Client is ready Just!");
-      this.client.on("message", async (message) => {
-        await whatsappControl(this.client, message);
+      this.client.on("ready", () => {
+        console.log("Client is ready Just!");
+        this.client.on("message", async (message) => {
+          await whatsappControl(this.client, message);
+        });
       });
+      this.client.initialize();
     });
-    this.client.initialize();
+  }
+  async qrcodeText() {
+    return this.codeQr;
   }
 };
