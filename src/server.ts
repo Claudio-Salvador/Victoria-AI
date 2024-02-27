@@ -6,7 +6,7 @@ import path from "path";
 import WhatsappInit from "./whatsappVictorIA/whatsapp";
 config();
 
-
+//thanks
 
 
 
