@@ -1,18 +1,19 @@
 {
     "version": 2,
     "builds": [
-      { "src": "./dist/server.js",
-       "use": "@now/node" }
+         { 
+        "src": "src/server.ts",
+       "use": "@vercel/node" 
+        }
     ],
     "routes": [
       {
-        "src": "/api/(.*)",
-        "dest": "./dist/server.js"
+        "src": "(.*)",
+        "dest": "src/server.ts"
       }
     ],
     "env": {
         "API_KEY":"AIzaSyByZkfZhajsyzVrDa1V5MRZjSuRa6jyr_0",
-        "PORT":"3000",
         "DATABASE_URL":"postgresql://postgres:gF1bEBfagcb*gaec52-G66f*Fb624-14@roundhouse.proxy.rlwy.net:47368/railway"
     }
   
