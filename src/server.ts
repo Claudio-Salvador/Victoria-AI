@@ -48,7 +48,7 @@ server.register(require("@fastify/view"), {
 server.get("/qr-code", showQRCode);
 
 server.get("/", (req, reply) => {
-    reply.view("index.ejs", { text: greetText });
+    reply.status(200).send("Welcome to the");
 });
 
 server.post('/generateRecipe', generateResponse);
