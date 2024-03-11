@@ -225,7 +225,6 @@ var WhatsappInit = class {
         qrcode.generate(qr, { small: true });
         this.codeQr = qr;
         this.qrcodeText();
-        console.log(qr);
         qrcodeG.toFile("qrcode.png", qr);
         resolve(qr);
       });

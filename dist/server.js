@@ -256,7 +256,6 @@ var WhatsappInit = class {
         qrcode.generate(qr, { small: true });
         this.codeQr = qr;
         this.qrcodeText();
-        console.log(qr);
         qrcodeG.toFile("qrcode.png", qr);
         resolve(qr);
       });
@@ -291,9 +290,6 @@ var greet = async () => {
   greetText = await GreetAI();
 };
 greet();
-setInterval(async () => {
-  greet();
-}, 6e4);
 server.register(import_cors.default, {
   origin: true
 });
@@ -305,11 +301,10 @@ server.register(require("@fastify/view"), {
 });
 server.get("/qr-code", showQRCode);
 server.get("/", (req, reply) => {
-  reply.view("index.ejs", { text: greetText, qr: textQr });
+  reply.view("index.ejs", { text: greetText });
 });
 server.post("/generateRecipe", generateResponse);
 server.listen({
-  host: "0.0.0.0",
   port: process.env.PORT ?? 3e3
 });
 console.log(`Server is listening on ${PORT}`);

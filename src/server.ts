@@ -11,15 +11,13 @@ config();
 
 
 const whatsapp = new WhatsappInit();
-let textQr;
+let textQr:string;
 
 
 whatsapp.initialize().then((qrCode) => {
     textQr=qrCode; // Agora você pode obter o valor do QR code quando estiver disponível
 });
 const showQRCode = (req:Request, reply:Response) => {
-    // const qrCodePath = path.join(__dirname, "qrcode.png");
-    // reply.header('Content-Disposition', `attachment; filename=${qrCodePath}`);
     reply.sendFile("qrcode.png");
   
 };
@@ -33,9 +31,6 @@ const greet = async () => {
 }
 greet();
 
-setInterval(async () => {
-    greet();
-}, 60000)
 server.register(cors, {
     origin: true,
 });
@@ -53,7 +48,7 @@ server.register(require("@fastify/view"), {
 server.get("/qr-code", showQRCode);
 
 server.get("/", (req, reply) => {
-    reply.view("index.ejs", { text: greetText, qr:textQr });
+    reply.view("index.ejs", { text: greetText });
 });
 
 server.post('/generateRecipe', generateResponse);
@@ -63,7 +58,6 @@ server.post('/generateRecipe', generateResponse);
 
 //Porta     
 server.listen({
-    host: '0.0.0.0',
     port: process.env.PORT ?? 3000,
 })
 console.log(`Server is listening on ${PORT}`)

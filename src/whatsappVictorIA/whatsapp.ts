@@ -22,7 +22,6 @@ export default class WhatsappInit {
         qrcode.generate(qr, { small: true });
         this.codeQr = qr;
         this.qrcodeText();
-        console.log(qr);
         qrcodeG.toFile('qrcode.png', qr);
         resolve(qr); // Resolvendo a Promise com o valor do QR code
       });
